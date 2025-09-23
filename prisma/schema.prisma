@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("jirea_POSTGRES_URL") // normal connection
+  directUrl = env("jirea_PRISMA_DATABASE_URL") // accelerate / direct
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+enum TicketStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum BoardType {
+  SPRINT
+  KANBAN
+}
+
+model Board {
+  id          String        @id @default(cuid())
+  type        BoardType
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  columns     BoardColumn[]
+  tickets     BoardTicket[]
+}
+
+model BoardColumn {
+  id       String        @id @default(cuid())
+  position Int
+  label    TicketStatus  @default(TODO)
+  board    Board         @relation(fields: [boardId], references: [id])
+  boardId  String
+  tickets  BoardTicket[]
+
+  @@unique([label, boardId])
+}
+
+model BoardTicket {
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  boardColumn   BoardColumn  @relation(fields: [boardColumnId], references: [id])
+  boardColumnId String
+  status        TicketStatus
+  board         Board        @relation(fields: [boardId], references: [id])
+  boardId       String
+  storyPoints   Int?
+  position      Int
+  comments      Comment[]
+  assignedUser  User         @relation("assigned", fields: [assignedTo], references: [id])
+  assignedTo    String
+  reportedUser  User         @relation("reported", fields: [reportedBy], references: [id])
+  reportedBy    String
+}
+
+model Comment {
+  id            String      @id @default(cuid())
+  description   String?
+  createdAt     DateTime    @default(now())
+  boardTicket   BoardTicket @relation(fields: [boardTicketId], references: [id])
+  boardTicketId String
+  commenter     User        @relation(fields: [writtenBy], references: [id])
+  writtenBy     String
+}
+
+model User {
+  id              String        @id @default(cuid())
+  name            String
+  email           String        @unique
+  emailVerified   Boolean?
+  image           String?
+  comments        Comment[]
+  assignedTicket  BoardTicket[] @relation("assigned")
+  reportedTickets BoardTicket[] @relation("reported")
+  accounts        Account[]
+  sessions        Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
