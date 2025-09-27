@@ -13,7 +13,9 @@
     "studio": "prisma studio",
     "tidy": "prisma format",
     "generate": "prisma generate",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -30,13 +32,16 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@storybook/nextjs": "^9.1.8",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
+    "eslint-plugin-storybook": "^9.1.8",
     "prisma": "^6.16.2",
+    "storybook": "^9.1.8",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"
